@@ -58,6 +58,11 @@
     [self.leftArrowButton setStyle:kFRDLivelyButtonStyleArrowLeft animated:NO];
     [self.rightArrowButton setStyle:kFRDLivelyButtonStyleArrowRight animated:NO];
     
+    self.bigButton.titleLabel.font = [UIFont systemFontOfSize:24.0];
+    [self.bigButton setTintColor:UIColor.blackColor];
+    self.bigButton.textAllignment = FRDLivelyButtonTextAllignmentRight;
+    [self.bigButton setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
+    [self.bigButton setTitle:@"Lively" forState:UIControlStateNormal];
     [self.bigButton setStyle:kFRDLivelyButtonStyleClose animated:YES];
     [self.bigButton setOptions:@{kFRDLivelyButtonLineWidth: @(4.0f)}];
     
@@ -70,7 +75,6 @@
     [button addTarget:self action:@selector(buttonAction:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *buttonItem = [[UIBarButtonItem alloc] initWithCustomView:button];
     self.navigationItem.rightBarButtonItem = buttonItem;
-    
 }
 
 - (void)didReceiveMemoryWarning

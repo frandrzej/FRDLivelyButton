@@ -25,6 +25,7 @@ NSString *const kFRDLivelyButtonStyleChangeAnimationDuration = @"kFRDLivelyButto
 @property (nonatomic) CGPoint offset;
 @property (nonatomic) CGPoint centerPoint;
 
+
 @property (nonatomic, strong) CAShapeLayer *circleLayer;
 @property (nonatomic, strong) CAShapeLayer *line1Layer;
 @property (nonatomic, strong) CAShapeLayer *line2Layer;
@@ -32,6 +33,7 @@ NSString *const kFRDLivelyButtonStyleChangeAnimationDuration = @"kFRDLivelyButto
 
 @property (nonatomic, strong) NSArray *shapeLayers;
 
+@property (nonatomic, strong) UIView *debugLayoutView;
 
 @end
 
@@ -67,6 +69,7 @@ NSString *const kFRDLivelyButtonStyleChangeAnimationDuration = @"kFRDLivelyButto
     self.circleLayer = [[CAShapeLayer alloc] init];
     
     self.options = [FRDLivelyButton defaultOptions];
+    self.contentSpacing = 12.0f;
     
     [@[ self.line1Layer, self.line2Layer, self.line3Layer, self.circleLayer ] enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         CAShapeLayer *layer = obj;
@@ -100,7 +103,120 @@ NSString *const kFRDLivelyButtonStyleChangeAnimationDuration = @"kFRDLivelyButto
     self.centerPoint = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMidY(self.bounds));
 }
 
--(void) setOptions:(NSDictionary *)options
+
+-(void)setTitle:(NSString *)title forState:(UIControlState)state
+{
+    [super setTitle:title forState:state];
+    [self layoutSubviews];
+    
+    //cheap workaround to animate moving the centerPoint
+    kFRDLivelyButtonStyle currentStyle = self.buttonStyle;
+    kFRDLivelyButtonStyle tempStyle;
+    if(self.buttonStyle == kFRDLivelyButtonStyleCircleClose)
+        tempStyle = kFRDLivelyButtonStyleCirclePlus;
+    else if(self.buttonStyle == kFRDLivelyButtonStyleCirclePlus)
+        tempStyle = kFRDLivelyButtonStyleCircleClose;
+    else if(self.buttonStyle == kFRDLivelyButtonStyleCaretRight)
+        tempStyle = kFRDLivelyButtonStyleCaretLeft;
+    else if(self.buttonStyle == kFRDLivelyButtonStyleCaretUp)
+        tempStyle = kFRDLivelyButtonStyleCaretDown;
+    else if(self.buttonStyle == kFRDLivelyButtonStyleCaretDown)
+        tempStyle = kFRDLivelyButtonStyleCaretUp;
+    else
+        tempStyle = kFRDLivelyButtonStyleCaretDown;
+    [self setStyle:tempStyle animated:NO];
+    [self setStyle:currentStyle animated:YES];
+}
+
+-(CGFloat)contentSpacing
+{
+    if(self.titleLabel.text.length)
+        return _contentSpacing;
+    else
+        return 0;
+}
+
+-(void)layoutSubviews
+{
+    [super layoutSubviews];
+    
+    CGPoint centerPoint = self.centerPoint;
+    CGPoint labelCenterPoint = self.titleLabel.center;
+    
+    CGSize labelSize = [self.titleLabel sizeThatFits:self.bounds.size];
+    CGSize layersSize = CGSizeMake(self.dimension, self.dimension);
+    
+    CGSize desiredSize = CGSizeZero;
+    switch (self.textAllignment) {
+        case FRDLivelyButtonTextAllignmentRight:
+            desiredSize.width = labelSize.width + self.contentSpacing + layersSize.width;
+            //correct points in desiredSize
+            centerPoint.x = layersSize.width/2.0;
+            labelCenterPoint.x = desiredSize.width - labelSize.width/2.0;
+            if(desiredSize.width < self.bounds.size.width) {
+                //correct points in actual size
+                CGFloat horizontalInset = (self.bounds.size.width - desiredSize.width)/2.0;
+                centerPoint.x += horizontalInset;
+                labelCenterPoint.x += horizontalInset;
+            }
+            break;
+        case FRDLivelyButtonTextAllignmentLeft:
+            desiredSize.width = labelSize.width + self.contentSpacing + layersSize.width;
+            //correct points in desiredSize
+            centerPoint.x = desiredSize.width - layersSize.width/2.0;
+            labelCenterPoint.x = labelSize.width/2.0;
+            if(desiredSize.width < self.bounds.size.width) {
+                //correct points in actual size
+                CGFloat horizontalInset = (self.bounds.size.width - desiredSize.width)/2.0;
+                centerPoint.x += horizontalInset;
+                labelCenterPoint.x += horizontalInset;
+            }
+            break;
+        case FRDLivelyButtonTextAllignmentBottom:
+            desiredSize.height = labelSize.height + self.contentSpacing + layersSize.height;
+            //correct points in desiredSize
+            centerPoint.y = layersSize.height/2.0;
+            labelCenterPoint.y = desiredSize.height - labelSize.height/2.0;
+            if(desiredSize.height < self.bounds.size.height) {
+                //correct points in actual size
+                CGFloat verticalInset = (self.bounds.size.height - desiredSize.height)/2.0;
+                centerPoint.x += verticalInset;
+                labelCenterPoint.x += verticalInset;
+            }
+            break;
+        case FRDLivelyButtonTextAllignmentTop:
+            desiredSize.height = labelSize.height + self.contentSpacing + layersSize.height;
+            //correct points in desiredSize
+            centerPoint.y = desiredSize.height - layersSize.height/2.0;
+            labelCenterPoint.y = labelSize.height/2.0;
+            if(desiredSize.height < self.bounds.size.height) {
+                //correct points in actual size
+                CGFloat verticalInset = (self.bounds.size.height - desiredSize.height)/2.0;
+                centerPoint.y += verticalInset;
+                labelCenterPoint.y += verticalInset;
+            }
+            break;
+    }
+    
+    self.titleLabel.center = labelCenterPoint;
+    self.centerPoint = centerPoint;
+    
+    //TEMP
+    if(!self.debugLayoutView) {
+        self.debugLayoutView = UIView.new;
+        self.debugLayoutView.userInteractionEnabled = NO;
+        self.debugLayoutView.backgroundColor = [[UIColor purpleColor] colorWithAlphaComponent:0.3];
+        [self addSubview:self.debugLayoutView];
+//        [self sendSubviewToBack:self.debugLayoutView];
+    }
+    self.debugLayoutView.center = CGPointMake(CGRectGetMidX(self.bounds), CGRectGetMidY(self.bounds));
+    CGRect frame = self.debugLayoutView.frame;
+    frame.size = desiredSize;
+    self.debugLayoutView.frame = frame;
+}
+
+
+-(void)setOptions:(NSDictionary *)options
 {
     _options = options;
     
@@ -282,20 +398,16 @@ NSString *const kFRDLivelyButtonStyleChangeAnimationDuration = @"kFRDLivelyButto
         newCircleAlpha = 0.0f;
         newLine1Path = [self createCenteredLineWithRadius:self.dimension/2.0f angle:M_PI offset:CGPointMake(0, 0)];
         newLine1Alpha = 1.0f;
-        newLine2Path = [self createLineFromPoint:CGPointMake(0, self.dimension/2.0f)
-                                         toPoint:CGPointMake(self.dimension/2.0f/GOLDEN_RATIO, self.dimension/2+self.dimension/2.0f/GOLDEN_RATIO)];
-        newLine3Path = [self createLineFromPoint:CGPointMake(0, self.dimension/2.0f)
-                                         toPoint:CGPointMake(self.dimension/2.0f/GOLDEN_RATIO, self.dimension/2-self.dimension/2.0f/GOLDEN_RATIO)];
+        newLine2Path = [self createLineFromPoint:CGPointMake(0, self.dimension/2.0f) toPoint:CGPointMake(self.dimension/2.0f/GOLDEN_RATIO, self.dimension/2+self.dimension/2.0f/GOLDEN_RATIO)];
+        newLine3Path = [self createLineFromPoint:CGPointMake(0, self.dimension/2.0f) toPoint:CGPointMake(self.dimension/2.0f/GOLDEN_RATIO, self.dimension/2-self.dimension/2.0f/GOLDEN_RATIO)];
         
     } else if (style == kFRDLivelyButtonStyleArrowRight) {
         newCirclePath = [self createCenteredCircleWithRadius:self.dimension/20.0f];
         newCircleAlpha = 0.0f;
         newLine1Path = [self createCenteredLineWithRadius:self.dimension/2.0f angle:0 offset:CGPointMake(0, 0)];
         newLine1Alpha = 1.0f;
-        newLine2Path = [self createLineFromPoint:CGPointMake(self.dimension, self.dimension/2.0f)
-                                         toPoint:CGPointMake(self.dimension - self.dimension/2.0f/GOLDEN_RATIO, self.dimension/2+self.dimension/2.0f/GOLDEN_RATIO)];
-        newLine3Path = [self createLineFromPoint:CGPointMake(self.dimension, self.dimension/2.0f)
-                                         toPoint:CGPointMake(self.dimension - self.dimension/2.0f/GOLDEN_RATIO, self.dimension/2-self.dimension/2.0f/GOLDEN_RATIO)];
+        newLine2Path = [self createLineFromPoint:CGPointMake(self.dimension, self.dimension/2.0f) toPoint:CGPointMake(self.dimension - self.dimension/2.0f/GOLDEN_RATIO, self.dimension/2+self.dimension/2.0f/GOLDEN_RATIO)];
+        newLine3Path = [self createLineFromPoint:CGPointMake(self.dimension, self.dimension/2.0f) toPoint:CGPointMake(self.dimension - self.dimension/2.0f/GOLDEN_RATIO, self.dimension/2-self.dimension/2.0f/GOLDEN_RATIO)];
         
     } else {
         NSAssert(FALSE, @"unknown type");

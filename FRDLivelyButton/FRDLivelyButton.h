@@ -23,15 +23,26 @@ typedef enum {
     kFRDLivelyButtonStyleArrowRight
 } kFRDLivelyButtonStyle;
 
+
+typedef enum : NSUInteger {
+    FRDLivelyButtonTextAllignmentRight = 0,
+    FRDLivelyButtonTextAllignmentBottom,
+    FRDLivelyButtonTextAllignmentTop,
+    FRDLivelyButtonTextAllignmentLeft
+} FRDLivelyButtonTextAllignment;
+
 @interface FRDLivelyButton : UIButton
 
 -(kFRDLivelyButtonStyle) buttonStyle;
 
 -(void) setStyle:(kFRDLivelyButtonStyle)style animated:(BOOL)animated;
 
+@property (nonatomic, assign) FRDLivelyButtonTextAllignment textAllignment;
+// spacing between button shape and text label
+@property (nonatomic, assign) CGFloat contentSpacing;
+
 @property (nonatomic, strong) NSDictionary *options;
 +(NSDictionary *) defaultOptions;
-
 // button customization options:
 
 // scale to apply to the button CGPath(s) when the button is pressed. Default is 0.9:
