@@ -58,13 +58,20 @@
     [self.leftArrowButton setStyle:kFRDLivelyButtonStyleArrowLeft animated:NO];
     [self.rightArrowButton setStyle:kFRDLivelyButtonStyleArrowRight animated:NO];
     
-    self.bigButton.titleLabel.font = [UIFont systemFontOfSize:24.0];
     [self.bigButton setTintColor:UIColor.blackColor];
-    self.bigButton.textAllignment = FRDLivelyButtonTextAllignmentRight;
     [self.bigButton setBackgroundColor:[UIColor colorWithWhite:0.7 alpha:1]];
-    [self.bigButton setTitle:@"Lively" forState:UIControlStateNormal];
+    //    self.bigButton.titleLabel.font = [UIFont systemFontOfSize:24.0];
+    //    self.bigButton.textAllignment = FRDLivelyButtonTextAllignmentRight;
+    //    [self.bigButton setTitle:@"Lively" forState:UIControlStateNormal];
+    
+    [self.bigButton setAttributedTitle:[self multilineAttributedString] forState:UIControlStateNormal];
+    [self.bigButton.titleLabel setNumberOfLines:0];
+    [self.bigButton.titleLabel setLineBreakMode:NSLineBreakByWordWrapping];
+    
     [self.bigButton setStyle:kFRDLivelyButtonStyleClose animated:YES];
-    [self.bigButton setOptions:@{kFRDLivelyButtonLineWidth: @(4.0f)}];
+    [self.bigButton setOptions:@{ kFRDLivelyButtonLineWidth: @(4.0f),
+                                  kFRDLivelyButtonUnHighlightAnimationDuration: @(0.1),
+                                  kFRDLivelyButtonHighlightAnimationDuration: @(0.03)} ];
     
     FRDLivelyButton *button = [[FRDLivelyButton alloc] initWithFrame:CGRectMake(0,0,36,28)];
     [button setOptions:@{ kFRDLivelyButtonLineWidth: @(2.0f),
@@ -77,10 +84,26 @@
     self.navigationItem.rightBarButtonItem = buttonItem;
 }
 
-- (void)didReceiveMemoryWarning
+-(NSAttributedString *)multilineAttributedString
 {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+    NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    [style setAlignment:NSTextAlignmentCenter];
+    [style setLineBreakMode:NSLineBreakByWordWrapping];
+    
+    UIFont *font1 = [UIFont fontWithName:@"HelveticaNeue-Medium" size:20.0f];
+    UIFont *font2 = [UIFont fontWithName:@"HelveticaNeue-Light"  size:20.0f];
+    NSDictionary *dict1 = @{NSUnderlineStyleAttributeName:@(NSUnderlineStyleSingle),
+                            NSFontAttributeName:font1,
+                            NSParagraphStyleAttributeName:style}; // Added line
+    NSDictionary *dict2 = @{NSUnderlineStyleAttributeName:@(NSUnderlineStyleNone),
+                            NSFontAttributeName:font2,
+                            NSParagraphStyleAttributeName:style}; // Added line
+    
+    NSMutableAttributedString *attString = [[NSMutableAttributedString alloc] init];
+    [attString appendAttributedString:[[NSAttributedString alloc] initWithString:@"LINE 1\n"    attributes:dict1]];
+    [attString appendAttributedString:[[NSAttributedString alloc] initWithString:@"line 2"      attributes:dict2]];
+    
+    return attString.copy;
 }
 
 - (IBAction)changeButtonStyleAction:(FRDLivelyButton *)sender

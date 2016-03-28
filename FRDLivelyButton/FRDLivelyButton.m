@@ -128,6 +128,30 @@ NSString *const kFRDLivelyButtonStyleChangeAnimationDuration = @"kFRDLivelyButto
     [self setStyle:currentStyle animated:YES];
 }
 
+-(void)setAttributedTitle:(NSAttributedString *)title forState:(UIControlState)state
+{
+    [super setAttributedTitle:title forState:state];
+    [self layoutSubviews];
+    
+    //cheap workaround to animate moving the centerPoint
+    kFRDLivelyButtonStyle currentStyle = self.buttonStyle;
+    kFRDLivelyButtonStyle tempStyle;
+    if(self.buttonStyle == kFRDLivelyButtonStyleCircleClose)
+        tempStyle = kFRDLivelyButtonStyleCirclePlus;
+    else if(self.buttonStyle == kFRDLivelyButtonStyleCirclePlus)
+        tempStyle = kFRDLivelyButtonStyleCircleClose;
+    else if(self.buttonStyle == kFRDLivelyButtonStyleCaretRight)
+        tempStyle = kFRDLivelyButtonStyleCaretLeft;
+    else if(self.buttonStyle == kFRDLivelyButtonStyleCaretUp)
+        tempStyle = kFRDLivelyButtonStyleCaretDown;
+    else if(self.buttonStyle == kFRDLivelyButtonStyleCaretDown)
+        tempStyle = kFRDLivelyButtonStyleCaretUp;
+    else
+        tempStyle = kFRDLivelyButtonStyleCaretDown;
+    [self setStyle:tempStyle animated:NO];
+    [self setStyle:currentStyle animated:YES];
+}
+
 -(CGFloat)contentSpacing
 {
     if(self.titleLabel.text.length)
